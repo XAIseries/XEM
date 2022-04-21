@@ -2,7 +2,7 @@
 This repository contains the Python implementation of XEM as described in 
 the paper [XEM: An Explainable-by-Design Ensemble Method for Multivariate Time Series Classification](https://hal.inria.fr/hal-03599214/document).
 
-![Alt-Text](/images/non_terminating_atrial_fibrilation.png | width="50%")
+<img src="/images/non_terminating_atrial_fibrilation.png" width="70%">
 
 ## Requirements
 XEM has been implemented in Python 3.6 with the following packages:
