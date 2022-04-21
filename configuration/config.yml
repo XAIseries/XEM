@@ -1,0 +1,14 @@
+{
+    "experiment_run": 1,
+    "dataset": "BasicMotions",
+    "validation_split": [3,1],
+    "window": 0.2,
+    "trees": 1,
+    "max_depth": 0,
+    "max_samples": 0.8,
+    "n_jobs": -1,
+    "random_state": 0
+    
+    # The other LCE parameters can be added and modified in this configuration file (current=default values) 
+    # Please see LCE API documentation: https://lce.readthedocs.io/en/latest/generated/lce.LCEClassifier.html
+}
