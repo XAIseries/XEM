@@ -7,12 +7,13 @@ the paper [XEM: An Explainable-by-Design Ensemble Method for Multivariate Time S
 </p>
 
 ## Requirements
-XEM has been implemented in Python 3.6 with the following packages:
+XEM has been implemented in Python 3.8 with the following packages:
 * lcensemble
 * numpy
 * pandas
+* pyarrow
+* pyyaml
 * scikit-learn
-* yaml
 
 ## Usage
 Run `main.py` with the following argument:

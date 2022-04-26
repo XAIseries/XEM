@@ -108,8 +108,7 @@ def export_results(clf, encoder, configuration, X_train, y_train, X_validation,
     log('Accuracy test: {0}'.format(accuracy_test))
     
     # Export results
-    results_export = pd.DataFrame()
-    results_export = results_export.append([[configuration['dataset'],
+    results_export = pd.DataFrame([[configuration['dataset'],
                                              configuration['experiment_run'],
                                              int(configuration['window']*100),
                                              configuration['trees'],
