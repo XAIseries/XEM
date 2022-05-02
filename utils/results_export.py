@@ -91,6 +91,7 @@ def export_results(clf, encoder, configuration, X_train, y_train, X_validation,
                                     res_train_mts.pred_num.astype(int))
     
     accuracy_validation = '-'
+    res_validation_mts = []
     if configuration['validation_split'][1] != 0:
         y_pred_validation = clf.predict_proba(X_validation[:,2:])
         res_validation_mts = get_res_mts(X_validation, y_validation, 

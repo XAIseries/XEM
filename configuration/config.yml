@@ -9,6 +9,6 @@
     "n_jobs": -1,
     "random_state": 0
     
-    # The other LCE parameters can be added and modified in this configuration file (current=default values) 
+    # The other parameters of LCE can be added and modified in this configuration file (current=default values) 
     # Please see LCE API documentation: https://lce.readthedocs.io/en/latest/generated/lce.LCEClassifier.html
 }

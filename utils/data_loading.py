@@ -145,21 +145,19 @@ def import_data(dataset, window, xp_dir, val_split=[3, 1], log=print):
     log('Number of features: {0}'.format(int(n_features)))
     
     # Generate train/validation split
-    skf = StratifiedKFold(n_splits=val_split[0], shuffle=False)
     df_split = pd.concat([pd.DataFrame(X_train[:,0]), pd.DataFrame(y)], axis=1)
     df_split.columns = ['id', 'target']
     df_split = df_split.groupby(['id']).mean().reset_index(drop=False)
-    i = 1
-    for train_index, val_index in skf.split(df_split.id, df_split.target):
-        if val_split[1]==0:
-            y_train, y_val = y_train, []
-            X_train, X_val = X_train, []
-            break
-        if i == val_split[1]:
-            y_train, y_val = y_train[np.isin(X_train[:,0], df_split.iloc[train_index,0].values)], y_train[~np.isin(X_train[:,0], df_split.iloc[train_index,0].values)]
-            X_train, X_val = X_train[np.isin(X_train[:,0], df_split.iloc[train_index,0].values)], X_train[~np.isin(X_train[:,0], df_split.iloc[train_index,0].values)]
-            break
-        i+=1
+    
+    if val_split[1]==0:
+        y_train, y_val = y_train, []
+        X_train, X_val = X_train, []
+    else:
+        skf = StratifiedKFold(n_splits=val_split[0], shuffle=False)
+        train_index, val_index = list(skf.split(df_split.id, df_split.target))[val_split[1]-1]
+        y_train, y_val = y_train[np.isin(X_train[:,0], df_split.iloc[train_index,0].values)], y_train[~np.isin(X_train[:,0], df_split.iloc[train_index,0].values)]
+        X_train, X_val = X_train[np.isin(X_train[:,0], df_split.iloc[train_index,0].values)], X_train[~np.isin(X_train[:,0], df_split.iloc[train_index,0].values)]
+    
     log('\nCross-validation - folds: {0}, current: {1}'.format(val_split[0], val_split[1]))
     log('Training set size: {0}'.format(len(X_train)))
     log('Validation set size: {0}'.format(len(X_val)))
