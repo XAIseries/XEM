@@ -24,6 +24,10 @@ Run `main.py` with the following argument:
 python main.py --config configuration/config.yml
 ```
 
+The current configuration file provides an example of classification with XEM on the Basic Motions UEA dataset 
+with the configuration presented in the paper, and an example of identification of the time window used to classify the first MTS of the test set.
+
+
 ## Citation
 ```
 @article{Fauvel22XEM,
