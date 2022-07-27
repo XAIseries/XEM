@@ -173,15 +173,15 @@ def import_data(dataset, window, xp_dir, val_split=[3, 1], log=print):
 
     # Print input data information
     classes, y = np.unique(y_train, return_inverse=True)
-    mts_length = (len(X_train) / len(np.unique(X_train[:, 0])) - 1) / (1 - window)
-    window_size = window * mts_length
-    n_features = (X_train.shape[1] - 2) / window_size
+    mts_length = int((len(X_train) / len(np.unique(X_train[:, 0])) - 1) / (1 - window))
+    window_size = int(window * mts_length)
+    n_features = int((X_train.shape[1] - 2) / window_size)
     log("Number of MTS in train set: {0}".format(len(np.unique(X_train[:, 0]))))
     log("Number of MTS in test set: {0}".format(len(np.unique(X_test[:, 0]))))
     log("Number of classes: {0}".format(len(classes)))
-    log("MTS length: {0}".format(int(mts_length)))
-    log("Window size: {0}".format(int(window_size)))
-    log("Number of features: {0}".format(int(n_features)))
+    log("MTS length: {0}".format(mts_length))
+    log("Window size: {0}".format(window_size))
+    log("Number of features: {0}".format(n_features))
 
     # Generate train/validation split
     df_split = pd.concat([pd.DataFrame(X_train[:, 0]), pd.DataFrame(y)], axis=1)
