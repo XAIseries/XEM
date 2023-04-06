@@ -1,3 +1,4 @@
+import os
 import numpy as np
 import pandas as pd
 from sklearn.metrics import accuracy_score
@@ -160,7 +161,7 @@ def export_results(
     return results_export, res_train_mts, res_validation_mts, res_test_mts
 
 
-def get_mts_region(clf, encoder, X, y, res_mts, mts_id, window):
+def get_mts_region(clf, encoder, X, y, res_mts, mts_id, configuration):
     """
     Get the MTS region used by XEM to predict
 
@@ -184,24 +185,37 @@ def get_mts_region(clf, encoder, X, y, res_mts, mts_id, window):
     mts_id: integer
         ID of the MTS
 
-    window: float
-        Size of the time window
+    configuration: array
+        Elements of the configuration file
     """
-    pred_num = int(np.array(res_mts.loc[res_mts.id == mts_id, "pred_num"])[0])
-    max_pred = np.array(res_mts.loc[res_mts.id == mts_id, "max_pred"])[0]
-    pred_proba = clf.predict_proba(X[:, 2:])
-    mts_region = X[pred_proba[:, pred_num] == max_pred]
-    mts_length = (len(X) / len(np.unique(X[:, 0])) - 1) / (1 - window)
-    window_size = int(window * mts_length)
+    path = (
+        "./data/"
+        + configuration["dataset"]
+        + "/transformed/"
+        + str(int(configuration["window"] * 100))
+    )
+    for root, dirs, files in os.walk(path):
+        for file in files:
+            if file.startswith("X_train"):
+                mts_length = int(file[8:-4])
+    window_size = int(configuration["window"] * mts_length)
 
-    for i in range(0, len(mts_region)):
-        if i == 0:
-            start = mts_region[0][1] - window_size + 1
-        if i == (len(mts_region) - 1):
-            end = mts_region[0][1]
+    res_mts_id = res_mts[res_mts.id == mts_id].reset_index(drop=True)
+
+    pred_num = int(np.array(res_mts_id.loc[:, "pred_num"])[0])
+    max_pred = np.array(res_mts.loc[res_mts.id == mts_id, "max_pred"])[0]
+    target = res_mts_id.loc[:, "target"].values[0]
+    mts_length_id = int(np.array(res_mts_id.loc[:, "timestamp"])[0])
+
+    X_mts = X[X[:, 0] == mts_id]
+    pred_proba = clf.predict_proba(X_mts[:, 2:])
+    mts_region = X_mts[pred_proba[:, pred_num] == max_pred]
+    end = mts_region[0][1]
+    start = end - window_size + 1
 
     print("\nExample")
     print("MTS ID: {0}".format(mts_id))
-    print("MTS label: {0}".format(y[X[:, 0] == mts_id][0]))
+    print("MTS label: {0}".format(target))
     print("XEM prediction: {0}".format(encoder.inverse_transform([pred_num])[0]))
+    print("MTS Length: {0}".format(mts_length_id))
     print("MTS region used by XEM to predict: [{0}, {1}]".format(start, end))

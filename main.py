@@ -11,7 +11,6 @@ from utils.results_export import export_results, get_mts_region
 
 
 if __name__ == "__main__":
-
     # Load configuration
     parser = argparse.ArgumentParser(description="XEM")
     parser.add_argument(
@@ -80,7 +79,7 @@ if __name__ == "__main__":
     # Example of identification of the time window used to classify the first MTS of the test set
     mts_id = 1
     get_mts_region(
-        clf, encoder, X_test, y_test, results_test_mts, mts_id, configuration["window"]
+        clf, encoder, X_test, y_test, results_test_mts, mts_id, configuration
     )
 
     logclose()

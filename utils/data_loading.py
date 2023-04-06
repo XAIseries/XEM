@@ -54,16 +54,31 @@ def transform_data(dataset, window):
     def transform_mts(X, mts, mts_length, window_size, n_features):
         """Transform MTS"""
         X_mts = np.array(X[X.id == mts])
+        original_shape = X_mts.shape[0]
+
+        if original_shape < window_size:
+            # padding
+            X_mts_padding = np.zeros(
+                (window_size - original_shape, X_mts.shape[1]), dtype=object
+            )
+            X_mts = np.concatenate([X_mts_padding, X_mts], axis=0)
+            X_mts[:, 0] = X_mts[-1, 0]
+            X_mts[:, 1] = X_mts[-1, 1]
+            for p in range(len(X_mts)):
+                X_mts[p, 2] = p + 1
+
         X_mts_transformed = np.empty(
-            (mts_length - window_size + 1, 3 + window_size * n_features), dtype=object
+            (X_mts.shape[0] - window_size + 1, 3 + window_size * n_features),
+            dtype=object,
         )
         X_mts_transformed[:, : X_mts.shape[1]] = X_mts[window_size - 1 :, :]
         X_mts_transformed = [
             transform_mts_line(
-                X_mts, X_mts_transformed, line, mts_length, window_size, n_features
+                X_mts, X_mts_transformed, line, X_mts.shape[0], window_size, n_features
             )
             for line in range(0, X_mts_transformed.shape[0])
         ]
+
         return X_mts_transformed[0]
 
     # Load input data
@@ -102,7 +117,7 @@ def transform_data(dataset, window):
     X_test = test[:, 1:]
     y_test = test[:, 0]
 
-    return X_train, y_train, X_test, y_test
+    return X_train, y_train, X_test, y_test, mts_length
 
 
 def load_data(dataset, window):
@@ -127,19 +142,26 @@ def load_data(dataset, window):
     if not os.path.exists(path):
         # Transform the dataset and save it
         os.makedirs(path)
-        X_train, y_train, X_test, y_test = transform_data(dataset, window)
-        np.save(path + "/X_train.npy", X_train)
-        np.save(path + "/y_train.npy", y_train)
-        np.save(path + "/X_test.npy", X_test)
-        np.save(path + "/y_test.npy", y_test)
+        X_train, y_train, X_test, y_test, mts_length = transform_data(dataset, window)
+        np.save(path + "/X_train_" + str(mts_length) + ".npy", X_train)
+        np.save(path + "/y_train_" + str(mts_length) + ".npy", y_train)
+        np.save(path + "/X_test_" + str(mts_length) + ".npy", X_test)
+        np.save(path + "/y_test_" + str(mts_length) + ".npy", y_test)
     else:
         # Load existing transformed dataset
-        X_train = np.load(path + "/X_train.npy", allow_pickle=True)
-        y_train = np.load(path + "/y_train.npy", allow_pickle=True)
-        X_test = np.load(path + "/X_test.npy", allow_pickle=True)
-        y_test = np.load(path + "/y_test.npy", allow_pickle=True)
+        for root, dirs, files in os.walk(path):
+            for file in files:
+                if file.startswith("X_train"):
+                    X_train = np.load(os.path.join(root, file), allow_pickle=True)
+                    mts_length = int(file[8:-4])
+                elif file.startswith("y_train"):
+                    y_train = np.load(os.path.join(root, file), allow_pickle=True)
+                elif file.startswith("X_test"):
+                    X_test = np.load(os.path.join(root, file), allow_pickle=True)
+                else:
+                    y_test = np.load(os.path.join(root, file), allow_pickle=True)
 
-    return X_train, y_train, X_test, y_test
+    return X_train, y_train, X_test, y_test, mts_length
 
 
 def import_data(dataset, window, xp_dir, val_split=[3, 1], log=print):
@@ -169,17 +191,16 @@ def import_data(dataset, window, xp_dir, val_split=[3, 1], log=print):
         Train, validation and test sets
     """
     # Load train and test sets
-    X_train, y_train, X_test, y_test = load_data(dataset, window)
+    X_train, y_train, X_test, y_test, mts_length = load_data(dataset, window)
 
     # Print input data information
     classes, y = np.unique(y_train, return_inverse=True)
-    mts_length = int((len(X_train) / len(np.unique(X_train[:, 0])) - 1) / (1 - window))
     window_size = int(window * mts_length)
     n_features = int((X_train.shape[1] - 2) / window_size)
     log("Number of MTS in train set: {0}".format(len(np.unique(X_train[:, 0]))))
     log("Number of MTS in test set: {0}".format(len(np.unique(X_test[:, 0]))))
     log("Number of classes: {0}".format(len(classes)))
-    log("MTS length: {0}".format(mts_length))
+    log("MTS length (max): {0}".format(mts_length))
     log("Window size: {0}".format(window_size))
     log("Number of features: {0}".format(n_features))
 
