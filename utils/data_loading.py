@@ -205,26 +205,28 @@ def import_data(dataset, window, xp_dir, val_split=[3, 1], log=print):
     log("Number of features: {0}".format(n_features))
 
     # Generate train/validation split
-    df_split = pd.concat([pd.DataFrame(X_train[:, 0]), pd.DataFrame(y)], axis=1)
-    df_split.columns = ["id", "target"]
-    df_split = df_split.groupby(["id"]).mean().reset_index(drop=False)
+    unique_ids, indices = np.unique(X_train[:, 0], return_inverse=True)
+    mean_targets = np.bincount(indices, weights=y) / np.bincount(indices)
 
     if val_split[1] == 0:
         y_train, y_val = y_train, []
         X_train, X_val = X_train, []
     else:
         skf = StratifiedKFold(n_splits=val_split[0], shuffle=False)
-        train_index, val_index = list(skf.split(df_split.id, df_split.target))[
+        train_index, val_index = list(skf.split(unique_ids, mean_targets))[
             val_split[1] - 1
         ]
-        y_train, y_val = (
-            y_train[np.isin(X_train[:, 0], df_split.iloc[train_index, 0].values)],
-            y_train[~np.isin(X_train[:, 0], df_split.iloc[train_index, 0].values)],
-        )
-        X_train, X_val = (
-            X_train[np.isin(X_train[:, 0], df_split.iloc[train_index, 0].values)],
-            X_train[~np.isin(X_train[:, 0], df_split.iloc[train_index, 0].values)],
-        )
+        train_ids = unique_ids[train_index]
+        val_ids = unique_ids[val_index]
+        # Create a dictionary that maps each unique id to its corresponding index in the train_ids array
+        train_id_dict = {id: i for i, id in enumerate(train_ids)}
+
+        # Create boolean masks for indexing the training and validation data
+        train_mask = np.array([id in train_id_dict for id in X_train[:, 0]])
+        val_mask = ~train_mask
+
+        X_train, X_val = X_train[train_mask], X_train[val_mask]
+        y_train, y_val = y_train[train_mask], y_train[val_mask]
 
     log(
         "\nCross-validation - folds: {0}, current: {1}".format(
